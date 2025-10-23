@@ -289,20 +289,33 @@
                                         (send change-current-tab-to-a-new-file-when
                                               get-selection)))]))
 
+    (define experimental-tab
+      (new vertical-panel%
+           [parent tp]))
+    
     (define is-binary-file-open
       (new check-box%
            [label "Open a known binary file in a new tab."]
-           [parent tp]
+           [parent experimental-tab]
            [value (preferences:get 'files-viewer:binary-file-open)]
            [callback (λ (c e)
                        (preferences:set 'files-viewer:binary-file-open
                                         (send is-binary-file-open get-value)))]))
 
+    (define is-change-on-open
+      (new check-box%
+           [label "Change the current directory to the opened file when DrRacket launches."]
+           [parent experimental-tab]
+           [value (preferences:get 'files-viewer:change-on-open)]
+           [callback (λ (c e)
+                       (preferences:set 'files-viewer:change-on-open
+                                        (send is-change-on-open get-value)))]))
+
     (define (update-panels)
       (send tp change-children (λ (l)
                                  (match (send tp get-selection)
                                    [0 (list change-current-tab-to-a-new-file-when)]
-                                   [1 (list is-binary-file-open)]))))
+                                   [1 (list experimental-tab)]))))
     (update-panels)))
                                               
     

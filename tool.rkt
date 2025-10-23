@@ -31,6 +31,9 @@
                   (preferences:set-default 'files-viewer:filter-types2
                                            #f
                                            boolean?)
+                  (preferences:set-default 'files-viewer:change-on-open
+                                           #f
+                                           boolean?)
                   (preferences:set-default 'files-viewer:filter-types
                                            '()
                                            list?)
@@ -60,6 +63,7 @@
       (define main-directory (preferences:get 'files-viewer:directory))
       (define is-show (preferences:get 'files-viewer:is-show))
       (define auto-refresh? (preferences:get 'files-viewer:auto-refresh))
+      (define change-on-open (preferences:get 'files-viewer:change-on-open))
       
       (define fschange (new fschange%))
       (define fschange-timer
@@ -101,11 +105,15 @@
                              (~a dir))
             (send *dir-control set-path (path-alist dir))
             (update-files!))))
-
       
       (inherit get-show-menu change-to-file change-to-tab create-new-tab
                get-current-tab open-in-new-tab find-matching-tab)
-
+      
+      (define (change-to-current-file)
+        (define tab (send this get-current-tab))
+        (define d (send tab get-directory))
+        (change-to-directory d))
+      
       (define/private (update-fschange)
         (when auto-refresh?
           (send fschange change-dirs (send *files get-opened-inside))))
@@ -200,9 +208,7 @@
                                       (update-files!)
                                       (send fschange change-dirs (set))))]
                                [change-to-the-directory-of-current-file-callback
-                                (thunk 
-                                 (define d (send (send this get-current-tab) get-directory))
-                                 (change-to-directory d))]
+                                change-to-current-file]
                                [change-to-the-common-directory-callback
                                 (thunk
                                  (define d
@@ -257,6 +263,10 @@
                 (λ (x)
                   (filter
                    (λ (x) (not (eq? real-area x))) x))))
+        
+        (when change-on-open
+          (change-to-current-file))
+        
         (make-object vertical-panel% area))
 
       (define/private (safe-to-change-file? ed)
